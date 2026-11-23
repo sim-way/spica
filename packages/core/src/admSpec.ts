@@ -82,6 +82,7 @@ const ROOT: SpecNode = {
     { name: "externalSystems", type: "ExternalSystem[]", required: false, description: "Third-party integrations the system talks to." },
     { name: "roles", type: "Role[]", required: false, description: "RBAC permission groups scoped inside the system." },
     { name: "aggregates", type: "Aggregate[]", required: true, description: "The domain aggregates (consistency boundaries)." },
+    { name: "globalInvariants", type: "GlobalInvariant[]", required: false, description: "Cross-aggregate domain invariants that govern system-wide business rules." },
     { name: "globalEvents", type: "DomainEvent[]", required: false, defaultValue: "[]", description: "Cross-aggregate domain events." },
     { name: "reactors", type: "Reactor[]", required: false, description: "Event-driven reactors bridging external systems." },
   ],

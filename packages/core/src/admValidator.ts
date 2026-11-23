@@ -301,6 +301,21 @@ export function validateAdm(rawInput: unknown): ValidationResult {
     }
   }
 
+  // Step 4: Validate Global Invariants
+  const globalInvariants = model.globalInvariants || [];
+  for (let i = 0; i < globalInvariants.length; i++) {
+    const inv = globalInvariants[i];
+    const invPath = `globalInvariants[${i}]`;
+
+    if (!inv.rule || inv.rule.trim() === "") {
+      errors.push({
+        code: "E_GLOBAL_INVARIANT_EMPTY_RULE",
+        path: `${invPath}.rule`,
+        message: `GlobalInvariant at index ${i} has an empty or missing rule. Invariant rules must be non-empty strings.`
+      });
+    }
+  }
+
   return {
     valid: errors.length === 0,
     errors,

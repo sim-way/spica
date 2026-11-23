@@ -98,4 +98,57 @@ describe("Kiro Spec Projector (AWS Kiro Agentic IDE Spec Generation)", () => {
       projectKiroSpec(libraryAdm, { aggregateName: "NonExistentAgg" });
     }).toThrow('Aggregate "NonExistentAgg" not found');
   });
+
+  it("should project globalInvariants into 'System & Global Invariants' section in requirements", () => {
+    const admWithGlobalInvariants: AstRoot = {
+      ...libraryAdm,
+      globalInvariants: [
+        {
+          name: "MaxActivePatrons",
+          rule: "Total active patrons must not exceed system capacity",
+          scope: "SystemWide",
+          intentTrace: "Prevents system overload"
+        },
+        {
+          rule: "No patron can hold more than 10 books simultaneously"
+        },
+        {
+          name: "RoleSeparation",
+          rule: "Librarians cannot act as patrons in circulation operations",
+          scope: "CrossAggregate"
+        }
+      ]
+    };
+
+    const result = projectKiroSpec(admWithGlobalInvariants);
+    const requirements = result.files.requirements;
+
+    // Verify "System & Global Invariants" section exists
+    expect(requirements).toContain("## System & Global Invariants");
+    expect(requirements).toContain("cross-aggregate domain invariants");
+    
+    // Verify all global invariants are projected
+    expect(requirements).toContain("### Global Invariant 1 (MaxActivePatrons)");
+    expect(requirements).toContain("**Rule:** Total active patrons must not exceed system capacity");
+    expect(requirements).toContain("Scope: SystemWide");
+    expect(requirements).toContain("Intent: Prevents system overload");
+
+    expect(requirements).toContain("### Global Invariant 2");
+    expect(requirements).toContain("**Rule:** No patron can hold more than 10 books simultaneously");
+
+    expect(requirements).toContain("### Global Invariant 3 (RoleSeparation)");
+    expect(requirements).toContain("Scope: CrossAggregate");
+  });
+
+  it("should omit 'System & Global Invariants' section when globalInvariants is empty", () => {
+    const admWithoutGlobalInvariants: AstRoot = {
+      ...libraryAdm,
+      globalInvariants: []
+    };
+
+    const result = projectKiroSpec(admWithoutGlobalInvariants);
+    const requirements = result.files.requirements;
+
+    expect(requirements).not.toContain("## System & Global Invariants");
+  });
 });

@@ -163,6 +163,14 @@ export const InvariantNodeSchema = z.object({
 });
 export type InvariantNode = z.infer<typeof InvariantNodeSchema>;
 
+export const GlobalInvariantSchema = z.object({
+  name: z.string().optional(),
+  rule: z.string(),
+  scope: z.string().optional(),
+  intentTrace: z.string().optional(),
+});
+export type GlobalInvariant = z.infer<typeof GlobalInvariantSchema>;
+
 export const BddGivenSchema = z.object({
   initialState: z.string(),
   priorEvents: z.array(z.string()).optional(),
@@ -263,6 +271,7 @@ export const AstRootSchema = z.preprocess(
     ).default(() => new Date().toISOString()),
     roles: z.array(RoleNodeSchema).optional(),
     aggregates: z.array(AggregateNodeSchema),
+    globalInvariants: z.array(GlobalInvariantSchema).optional(),
     globalEvents: z.array(DomainEventNodeSchema).default([]).optional(),
     reactors: z.array(ReactorNodeSchema).optional(),
   }).strict(),

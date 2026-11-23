@@ -291,4 +291,104 @@ describe("Virgo Core ADM Validator & InvariantNode Engine", () => {
     // 3. Test escapeLabel
     expect(escapeLabel("Hold [AggregateNode: (Hold)]")).toBe("Hold AggregateNode: Hold");
   });
+
+  // Global Invariants Tests
+  describe("Global Invariants (Issue #1)", () => {
+    it("should accept a valid ADM with globalInvariants declared", () => {
+      const withGlobalInvariants: AstRoot = {
+        ...libraryAdm,
+        globalInvariants: [
+          {
+            name: "MaxActivePatrons",
+            rule: "Total active patrons must not exceed system capacity",
+            scope: "SystemWide",
+            intentTrace: "Prevents system overload"
+          },
+          {
+            rule: "No patron can hold more than 10 books simultaneously"
+          }
+        ]
+      };
+
+      const result = validateAdm(withGlobalInvariants);
+      expect(result.valid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+      expect(result.model?.globalInvariants).toHaveLength(2);
+      expect(result.model?.globalInvariants?.[0].name).toBe("MaxActivePatrons");
+      expect(result.model?.globalInvariants?.[1].rule).toBe("No patron can hold more than 10 books simultaneously");
+    });
+
+    it("should reject globalInvariants with empty rule (E_GLOBAL_INVARIANT_EMPTY_RULE)", () => {
+      const withEmptyRule: AstRoot = {
+        ...libraryAdm,
+        globalInvariants: [
+          {
+            name: "InvalidInvariant",
+            rule: "",
+            scope: "SystemWide"
+          }
+        ]
+      };
+
+      const result = validateAdm(withEmptyRule);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.code === "E_GLOBAL_INVARIANT_EMPTY_RULE")).toBe(true);
+      const err = result.errors.find((e) => e.code === "E_GLOBAL_INVARIANT_EMPTY_RULE");
+      expect(err?.path).toContain("globalInvariants[0].rule");
+    });
+
+    it("should reject globalInvariants with whitespace-only rule", () => {
+      const withWhitespaceRule: AstRoot = {
+        ...libraryAdm,
+        globalInvariants: [
+          {
+            rule: "   "
+          }
+        ]
+      };
+
+      const result = validateAdm(withWhitespaceRule);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.code === "E_GLOBAL_INVARIANT_EMPTY_RULE")).toBe(true);
+    });
+
+    it("should handle globalInvariants as optional (undefined when omitted)", () => {
+      const withoutGlobalInvariants = { ...libraryAdm } as Record<string, unknown>;
+      delete (withoutGlobalInvariants as any).globalInvariants;
+
+      const result = validateAdm(withoutGlobalInvariants);
+      expect(result.valid).toBe(true);
+      // globalInvariants is optional, so it can be undefined
+      expect(result.model?.globalInvariants).toBeUndefined();
+    });
+
+    it("should handle multiple globalInvariants with comprehensive metadata", () => {
+      const comprehensive: AstRoot = {
+        ...libraryAdm,
+        globalInvariants: [
+          {
+            name: "RoleSeparation",
+            rule: "Librarians cannot act as patrons in circulation operations",
+            scope: "CrossAggregate",
+            intentTrace: "Ref: RBAC policy doc section 3.2"
+          },
+          {
+            rule: "Audit trail must be immutable",
+            intentTrace: "Compliance requirement"
+          },
+          {
+            name: "ConsistencyBoundary",
+            rule: "Hold-to-Loan transitions must maintain referential integrity"
+          }
+        ]
+      };
+
+      const result = validateAdm(comprehensive);
+      expect(result.valid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+      expect(result.model?.globalInvariants).toHaveLength(3);
+      expect(result.model?.globalInvariants?.[0].name).toBe("RoleSeparation");
+      expect(result.model?.globalInvariants?.[2].intentTrace).toBeUndefined();
+    });
+  });
 });

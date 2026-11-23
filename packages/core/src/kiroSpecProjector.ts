@@ -112,6 +112,24 @@ function generateSystemRequirements(model: AstRoot): string {
     lines.push("");
   }
 
+  if (model.globalInvariants && model.globalInvariants.length > 0) {
+    lines.push("## System & Global Invariants");
+    lines.push(
+      "These cross-aggregate domain invariants govern system-wide business rules and consistency constraints that span multiple aggregates."
+    );
+    lines.push("");
+
+    for (let i = 0; i < model.globalInvariants.length; i++) {
+      const inv = model.globalInvariants[i];
+      const name = inv.name ? ` (${inv.name})` : "";
+      const scope = inv.scope ? ` Scope: ${inv.scope}.` : "";
+      const trace = inv.intentTrace ? ` Intent: ${inv.intentTrace}` : "";
+      lines.push(`### Global Invariant ${i + 1}${name}`);
+      lines.push(`**Rule:** ${inv.rule}${scope}${trace}`);
+      lines.push("");
+    }
+  }
+
   lines.push("## Requirements");
   lines.push("");
 
