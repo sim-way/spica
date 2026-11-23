@@ -55,16 +55,14 @@ describe("Virgo Core ADM Validator & InvariantNode Engine", () => {
     expect(metaResult.model).not.toHaveProperty("xxxVersion");
   });
 
-  it("should auto-default a missing createdAt to the current ISO timestamp (#3)", () => {
+  it("should reject a missing createdAt as a required property (#3)", () => {
     const bare = { ...libraryAdm } as Record<string, unknown>;
     delete bare.createdAt;
     const result = validateAdm(bare);
-    expect(result.valid).toBe(true);
-    expect(result.errors).toHaveLength(0);
-    expect(result.model?.createdAt).toBeDefined();
-    expect(typeof result.model?.createdAt).toBe("string");
-    // Auto-populated value must be a valid ISO-8601 UTC timestamp.
-    expect(() => new Date(result.model!.createdAt!).toISOString()).not.toThrow();
+    expect(result.valid).toBe(false);
+    const err = result.errors.find((e) => e.code === "E_SCHEMA_INVALID" && e.path.includes("createdAt"));
+    expect(err).toBeDefined();
+    expect(err?.message).toContain("createdAt");
   });
 
   it("should reject a malformed createdAt with a format error (#3)", () => {

@@ -263,14 +263,13 @@ export const AstRootSchema = z.preprocess(
     externalSystems: z.array(ExternalSystemNodeSchema).optional(),
     // #1: the Open ADM document standard is versioned by `specVersion`
     // (defaulting to "0.0.0") and attributed by the optional `author`. The
-    // creation timestamp `createdAt` (ISO-8601 UTC) defaults to the current
-    // time when omitted; when provided, it must be a valid ISO-8601 UTC
-    // timestamp.
+    // creation timestamp `createdAt` (ISO-8601 UTC) is required and must be
+    // a valid ISO-8601 UTC timestamp.
     specVersion: z.string().default("0.0.0"),
     author: z.string().optional(),
     createdAt: z.iso.datetime(
       "createdAt must be an ISO-8601 UTC timestamp (e.g. 2026-10-19T09:24:17Z)"
-    ).default(() => new Date().toISOString()),
+    ),
     roles: z.array(RoleNodeSchema).optional(),
     aggregates: z.array(AggregateNodeSchema),
     globalInvariants: z.array(GlobalInvariantSchema).optional(),
