@@ -1,0 +1,785 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "domainName": {
+      "type": "string"
+    },
+    "systemName": {
+      "type": "string"
+    },
+    "systemDescription": {
+      "type": "string"
+    },
+    "actors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "externalSystems": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "technology": {
+            "type": "string"
+          },
+          "relationship": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "specVersion": {
+      "default": "0.0.0",
+      "type": "string"
+    },
+    "author": {
+      "type": "string"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+    },
+    "roles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "aggregates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "rootEntity": {
+            "type": "string"
+          },
+          "entities": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "fields": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "required": {
+                        "type": "boolean"
+                      },
+                      "isList": {
+                        "type": "boolean"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "values": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "type"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "relationships": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "target": {
+                        "type": "string"
+                      },
+                      "cardinality": {
+                        "type": "string",
+                        "enum": [
+                          "OneToOne",
+                          "OneToMany",
+                          "ManyToOne",
+                          "ManyToMany"
+                        ]
+                      },
+                      "composition": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "target",
+                      "cardinality",
+                      "composition"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "fields"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "valueObjects": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "values": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "fields": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "required": {
+                        "type": "boolean"
+                      },
+                      "isList": {
+                        "type": "boolean"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "values": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "type"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "relationships": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "target": {
+                        "type": "string"
+                      },
+                      "cardinality": {
+                        "type": "string",
+                        "enum": [
+                          "OneToOne",
+                          "OneToMany",
+                          "ManyToOne",
+                          "ManyToMany"
+                        ]
+                      },
+                      "composition": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "target",
+                      "cardinality",
+                      "composition"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "states": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "commands": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "actor": {
+                  "type": "string"
+                },
+                "allowedRoles": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "policies": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "requiredState": {
+                  "type": "string"
+                },
+                "targetState": {
+                  "type": "string"
+                },
+                "parameters": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "required": {
+                        "type": "boolean"
+                      },
+                      "isList": {
+                        "type": "boolean"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "values": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "type"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "payload": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "required": {
+                        "type": "boolean"
+                      },
+                      "isList": {
+                        "type": "boolean"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "values": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "type"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "isCreation": {
+                  "type": "boolean"
+                },
+                "triggerEvent": {
+                  "type": "string"
+                },
+                "emitsEvents": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "requiredState",
+                "targetState"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "events": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "emittedBy": {
+                  "type": "string"
+                },
+                "trigger": {
+                  "type": "string"
+                },
+                "payload": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "required": {
+                        "type": "boolean"
+                      },
+                      "isList": {
+                        "type": "boolean"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "values": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "type"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "policies": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "rule": {
+                  "type": "string"
+                },
+                "scope": {
+                  "type": "string"
+                },
+                "intentTrace": {
+                  "type": "string"
+                },
+                "sourceAggregate": {
+                  "type": "string"
+                },
+                "sourceEvent": {
+                  "type": "string"
+                },
+                "onEvent": {
+                  "type": "string"
+                },
+                "emitsCommand": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "description"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "transitions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "trigger": {
+                  "type": "string"
+                },
+                "fromState": {
+                  "type": "string"
+                },
+                "toState": {
+                  "type": "string"
+                },
+                "guardCondition": {
+                  "type": "string"
+                },
+                "guardConditions": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "trigger",
+                "fromState",
+                "toState"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "invariants": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "rule": {
+                  "type": "string"
+                },
+                "scope": {
+                  "type": "string"
+                },
+                "intentTrace": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "rule",
+                "scope"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "reducers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "commandName": {
+                  "type": "string"
+                },
+                "targetField": {
+                  "type": "string"
+                },
+                "operation": {
+                  "type": "string",
+                  "enum": [
+                    "SET",
+                    "ADD",
+                    "SUBTRACT"
+                  ]
+                },
+                "sourceParameter": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "commandName",
+                "targetField",
+                "operation",
+                "sourceParameter"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "bddScenarios": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "aggregateName": {
+                  "type": "string"
+                },
+                "given": {
+                  "type": "object",
+                  "properties": {
+                    "initialState": {
+                      "type": "string"
+                    },
+                    "priorEvents": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "initialState"
+                  ],
+                  "additionalProperties": false
+                },
+                "when": {
+                  "type": "object",
+                  "properties": {
+                    "commandName": {
+                      "type": "string"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {}
+                    }
+                  },
+                  "required": [
+                    "commandName"
+                  ],
+                  "additionalProperties": false
+                },
+                "then": {
+                  "type": "object",
+                  "properties": {
+                    "expectedState": {
+                      "type": "string"
+                    },
+                    "expectedEvents": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "expectedState"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "name",
+                "aggregateName",
+                "given",
+                "when",
+                "then"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "name",
+          "rootEntity",
+          "states"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "globalInvariants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "rule": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "intentTrace": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "rule"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "globalEvents": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "emittedBy": {
+            "type": "string"
+          },
+          "trigger": {
+            "type": "string"
+          },
+          "payload": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "required": {
+                  "type": "boolean"
+                },
+                "isList": {
+                  "type": "boolean"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "values": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "type"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "reactors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "listensTo": {
+            "type": "string"
+          },
+          "triggersPort": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "listensTo",
+          "triggersPort"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "domainName",
+    "specVersion",
+    "createdAt",
+    "aggregates"
+  ],
+  "additionalProperties": false,
+  "$id": "https://spica.simway.io/schema/adm.json",
+  "title": "Spica Open ADM Specification",
+  "description": "The canonical schema defining Application Domain Models (ADM) for Spec-Driven Development (SDD)."
+}
