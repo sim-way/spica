@@ -6,9 +6,12 @@
   <a href="https://www.npmjs.com/package/@simway/spica"><img src="https://img.shields.io/badge/npm-@simway%2Fspica-blue.svg?style=flat" alt="npm package" /></a>
   <a href="llms.txt"><img src="https://img.shields.io/badge/llms.txt-Agent_Ready-6366f1?style=flat" alt="llms.txt" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-475569.svg?style=flat" alt="License: Apache 2.0" /></a>
+  <a href="https://www.slopmanifesto.com/"><img src="https://img.shields.io/badge/Principles-No_AI_Slop-111827.svg?style=flat" alt="No AI Slop Manifesto" /></a>
 </p>
 
 ---
+
+> **Spica is a practical exploration of the [No AI Slop Manifesto](https://www.slopmanifesto.com/).**
 
 > **One Domain Model. Multiple Projections.**  
 > Open ADM is the single source of truth for domain concepts. Spica uses it behind the scenes to generate C4 diagrams, domain maps, DDD canvases, and OpenAPI contracts.
