@@ -166,6 +166,7 @@ describe("Spica CLI (runCli)", () => {
     expect(fs.existsSync(path.join(target, "CLAUDE.md"))).toBe(true);
     expect(fs.existsSync(path.join(target, "CODEX.md"))).toBe(true);
     expect(fs.existsSync(path.join(target, ".vscode", "settings.json"))).toBe(true);
+    expect(fs.existsSync(path.join(target, ".github", "copilot-instructions.md"))).toBe(true);
   });
 
   it("init templates embed the Open ADM root envelope skeleton (specVersion, createdAt, author)", () => {
@@ -213,6 +214,32 @@ describe("Spica CLI (runCli)", () => {
     expect(fs.existsSync(path.join(target, ".vscode", "settings.json"))).toBe(true);
   });
 
+  it("init --ide copilot creates only Copilot instructions with Spica guidance", () => {
+    const target = path.join(TMP_DIR, "init-copilot");
+    const code = runCli(["init", target, "--ide", "copilot"]);
+    expect(code).toBe(0);
+
+    expect(fs.existsSync(path.join(target, "CLAUDE.md"))).toBe(false);
+    expect(fs.existsSync(path.join(target, "CODEX.md"))).toBe(false);
+    expect(fs.existsSync(path.join(target, ".vscode", "settings.json"))).toBe(false);
+    expect(fs.existsSync(path.join(target, ".github", "skills", "spica-architect", "SKILL.md"))).toBe(false);
+    const instructions = fs.readFileSync(path.join(target, ".github", "copilot-instructions.md"), "utf-8");
+    for (const requirement of [
+      "specVersion",
+      "domainName",
+      "aggregates",
+      ".spica/<domain>.adm.json",
+      "schemas, enums, and services",
+      "persistence-only details",
+      "npx -y @simway/spica validate .spica/<domain>.adm.json",
+      "npx -y @simway/spica build",
+      "requiredState",
+      "targetState",
+    ]) {
+      expect(instructions).toContain(requirement);
+    }
+  });
+
   it("init does not overwrite existing files without --force", () => {
     const target = path.join(TMP_DIR, "init-no-overwrite");
     fs.mkdirSync(target, { recursive: true });
@@ -233,6 +260,19 @@ describe("Spica CLI (runCli)", () => {
     expect(fs.readFileSync(path.join(target, "CLAUDE.md"), "utf-8")).toContain("Spica");
   });
 
+  it("init skips existing Copilot instructions unless --force is passed", () => {
+    const target = path.join(TMP_DIR, "init-copilot-overwrite");
+    const copilotFile = path.join(target, ".github", "copilot-instructions.md");
+    fs.mkdirSync(path.dirname(copilotFile), { recursive: true });
+    fs.writeFileSync(copilotFile, "CUSTOM", "utf-8");
+
+    expect(runCli(["init", target, "--ide", "copilot"])).toBe(0);
+    expect(fs.readFileSync(copilotFile, "utf-8")).toBe("CUSTOM");
+
+    expect(runCli(["init", target, "--ide", "copilot", "--force"])).toBe(0);
+    expect(fs.readFileSync(copilotFile, "utf-8")).toContain("Spica Spec-Driven Development");
+  });
+
   it("help output documents the init command", () => {
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     const code = runCli(["--help"]);
@@ -241,7 +281,7 @@ describe("Spica CLI (runCli)", () => {
 
     expect(code).toBe(0);
     expect(output).toContain("init [dir]");
-    expect(output).toContain("--ide <claude|codex|vscode|all>");
+    expect(output).toContain("--ide <claude|codex|vscode|copilot|all>");
   });
 
   it("executes successfully when invoked via symlink (simulating npm .bin entry)", () => {

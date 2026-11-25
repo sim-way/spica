@@ -27,7 +27,7 @@ Every Open ADM document opens with a root envelope carrying spec metadata. Headl
     }
 
 0. **Bootstrap the Workspace (if needed):**
-   - If the repository lacks Spica tooling (\`CLAUDE.md\`, \`CODEX.md\`, \`.vscode/settings.json\`), run:
+   - If the repository lacks Spica tooling (\`CLAUDE.md\`, \`CODEX.md\`, \`.vscode/settings.json\`, \`.github/copilot-instructions.md\`), run:
      \`\`\`bash
      npx -y @simway/spica init
      \`\`\`
@@ -88,7 +88,7 @@ Every Open ADM document opens with a root envelope carrying spec metadata. Headl
     }
 
 0. **Bootstrap the Workspace (if needed):**
-   - If the repository lacks Spica tooling (\`CLAUDE.md\`, \`CODEX.md\`, \`.vscode/settings.json\`), run:
+   - If the repository lacks Spica tooling (\`CLAUDE.md\`, \`CODEX.md\`, \`.vscode/settings.json\`, \`.github/copilot-instructions.md\`), run:
      \`\`\`bash
      npx -y @simway/spica init
      \`\`\`
@@ -141,4 +141,42 @@ export const VSCODE_SETTINGS_TEMPLATE = `{
     }
   ]
 }
+`;
+
+export const COPILOT_INSTRUCTIONS_TEMPLATE = `# Spica Spec-Driven Development Instructions
+
+Use Spica Open ADM as the source of truth for business-domain behavior. Keep the model in \`.spica/<domain>.adm.json\`, with this root envelope:
+
+\`\`\`json
+{
+  "specVersion": "0.0.0",
+  "domainName": "MyDomain",
+  "aggregates": []
+}
+\`\`\`
+
+## Model First
+
+- For new business capabilities, model actors, aggregates, commands, lifecycle states, and invariants in the ADM before implementing runtime code.
+- When asked to explain, refactor, or add features to existing business logic, first extract or update the ADM from the existing schemas, enums, and services. Keep business concepts and rules; filter out persistence-only details such as database row IDs, timestamps, and storage-specific fields unless they represent domain behavior.
+- Preserve the existing domain model and update it when the requested behavior changes. Do not invent business rules or state transitions that are not grounded in the code or confirmed requirements.
+- Use the canonical schema: \`"$schema": "https://spica.simway.io/schema/adm.json"\`.
+
+## Verify the Model
+
+Before implementing code, validate the model and generate its projections:
+
+\`\`\`bash
+npx -y @simway/spica validate .spica/<domain>.adm.json
+npx -y @simway/spica build
+\`\`\`
+
+Resolve validation errors before proceeding. Review the projected state transitions and invariants as the implementation contract.
+
+## Implement Against Projected Behavior
+
+- Implement runtime code and tests strictly against modeled command transitions: each command's \`requiredState\` is its precondition and \`targetState\` is its resulting state.
+- Cover rejected transitions and domain invariants in tests; do not accept a command from a state other than its \`requiredState\` or transition to a different state than its \`targetState\`.
+- If the requested behavior is not represented in the model, update the ADM and regenerate projections before changing runtime behavior.
+- Re-run validation and build after changing the ADM, and run the relevant project tests after implementation.
 `;

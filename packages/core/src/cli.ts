@@ -27,9 +27,10 @@ import {
   CLAUDE_CODE_TEMPLATE,
   CODEX_TEMPLATE,
   VSCODE_SETTINGS_TEMPLATE,
+  COPILOT_INSTRUCTIONS_TEMPLATE,
 } from "./initTemplates.js";
 
-const VERSION = "0.0.8";
+const VERSION = "0.0.14";
 
 function printHelp() {
   console.log(`
@@ -40,7 +41,7 @@ Usage:
   spica <command> [options]
 
 Commands:
-  init [dir]                   Bootstrap IDE tooling (CLAUDE.md, CODEX.md, .vscode/settings.json)
+  init [dir]                   Bootstrap IDE tooling (CLAUDE.md, CODEX.md, .vscode/settings.json, Copilot)
   new [domain]                 Scaffold a schema-compliant Open ADM model into .spica/ (1 non-anemic aggregate)
   validate <file>              Validate an Open ADM model for invariant soundness
   spec                         Print an offline summary of the Open ADM metamodel
@@ -55,7 +56,7 @@ Commands:
 
 Options:
   --out, -o <path>             Specify output directory or file path
-  --ide <claude|codex|vscode|all>  Select environments for "init" (default: all)
+  --ide <claude|codex|vscode|copilot|all>  Select environments for "init" (default: all)
   --force, -f                  Overwrite existing files (for "init" and "new")
   --title <string>             Set system title for "new" (default: "<Domain> System")
   --actor <string>             Set primary actor for "new" (default: "Admin")
@@ -66,7 +67,7 @@ Options:
 
 Examples:
   npx -y @simway/spica init
-  npx -y @simway/spica init . --ide claude --force
+  npx -y @simway/spica init . --ide copilot --force
   npx -y @simway/spica new OrderFulfillment
   npx -y @simway/spica new billing --actor Admin --title "Billing System" --aggregate Invoice
   npx -y @simway/spica new order-fulfillment --out specs/ --force --json
@@ -105,10 +106,10 @@ function loadModel(filePath: string): any {
  */
 function printSpecReferenceFooter(): void {
   console.error(`\n📖 Open ADM Spec & Docs: ${ADM_DOCS_URL}`);
-  console.error(`💡 Tip: Run "spica init" to bootstrap schema-aware IDE prompts (CLAUDE.md, CODEX.md, VS Code settings).`);
+  console.error(`💡 Tip: Run "spica init" to bootstrap schema-aware IDE prompts (CLAUDE.md, CODEX.md, VS Code settings, Copilot instructions).`);
 }
 
-type IdeName = "claude" | "codex" | "vscode";
+type IdeName = "claude" | "codex" | "vscode" | "copilot";
 
 interface IdeTemplate {
   content: string;
@@ -119,9 +120,10 @@ const IDE_TEMPLATES: Record<IdeName, IdeTemplate> = {
   claude: { content: CLAUDE_CODE_TEMPLATE, target: "CLAUDE.md" },
   codex: { content: CODEX_TEMPLATE, target: "CODEX.md" },
   vscode: { content: VSCODE_SETTINGS_TEMPLATE, target: path.join(".vscode", "settings.json") },
+  copilot: { content: COPILOT_INSTRUCTIONS_TEMPLATE, target: path.join(".github", "copilot-instructions.md") },
 };
 
-const ALL_IDES: IdeName[] = ["claude", "codex", "vscode"];
+const ALL_IDES: IdeName[] = ["claude", "codex", "vscode", "copilot"];
 
 function runInit(args: string[]): number {
   let targetDir = ".";
@@ -134,11 +136,11 @@ function runInit(args: string[]): number {
       for (const ide of ALL_IDES) selected.add(ide);
       return true;
     }
-    if (value === "claude" || value === "codex" || value === "vscode") {
+    if (value === "claude" || value === "codex" || value === "vscode" || value === "copilot") {
       selected.add(value);
       return true;
     }
-    console.error(`Error: Unknown --ide value "${raw}". Expected one of: claude, codex, vscode, all.`);
+    console.error(`Error: Unknown --ide value "${raw}". Expected one of: claude, codex, vscode, copilot, all.`);
     return false;
   };
 
@@ -147,7 +149,7 @@ function runInit(args: string[]): number {
     if (arg === "--ide") {
       const value = args[i + 1];
       if (!value || value.startsWith("-")) {
-        console.error(`Error: --ide requires a value (claude | codex | vscode | all).`);
+        console.error(`Error: --ide requires a value (claude | codex | vscode | copilot | all).`);
         return 1;
       }
       if (!addIde(value)) return 1;
@@ -207,6 +209,7 @@ function runInit(args: string[]): number {
   console.log(`   • Claude Code — just start prompting; it reads CLAUDE.md automatically.`);
   console.log(`   • OpenAI Codex — run "codex" in this directory; it reads CODEX.md.`);
   console.log(`   • VS Code — open this folder; *.adm.json files get schema-aware validation.`);
+  console.log(`   • GitHub Copilot — open Copilot Chat; it reads .github/copilot-instructions.md automatically.`);
   console.log(`\nValidate your first model: npx -y @simway/spica validate <domain>.adm.json\n`);
 
   return 0;

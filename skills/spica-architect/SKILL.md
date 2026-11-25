@@ -6,7 +6,7 @@ description: Use whenever starting or building a new project, application, servi
 # Spica Architect Skill 🌟
 > **Spec-Driven Development (SDD) & Mathematical Invariant Architecture for Autonomous AI Agents**
 
-This skill equips AI coding agents (Claude Code, Cursor, OpenClaw, Windsurf) to take **full active ownership** of Domain-Driven Design, entity lifecycles, and multi-lens specification projections using the `@simway/spica` engine.
+This skill equips AI coding agents (Claude Code, GitHub Copilot, Cursor, OpenClaw, Windsurf) to take **full active ownership** of Domain-Driven Design, entity lifecycles, and multi-lens specification projections using the `@simway/spica` engine.
 
 ---
 
@@ -70,8 +70,8 @@ Agents operate on two complementary execution paths:
 
 ### Step 0: Workspace Tooling Check (Optional)
 If terminal access is available, check whether the project is already equipped with Spica tooling:
-- If `CLAUDE.md`, `CODEX.md`, or `.vscode/settings.json` are absent and the user plans to do recurring Spec-Driven Development in this repository, offer to initialize them:
-  > *"Would you like me to bootstrap Spica IDE configurations (`CLAUDE.md`, `CODEX.md`, `.vscode/settings.json`) in this project?"*
+- If `CLAUDE.md`, `CODEX.md`, `.vscode/settings.json`, or `.github/copilot-instructions.md` are absent and the user plans to do recurring Spec-Driven Development in this repository, offer to initialize them:
+  > *"Would you like me to bootstrap Spica IDE configurations (`CLAUDE.md`, `CODEX.md`, `.vscode/settings.json`, `.github/copilot-instructions.md`) in this project?"*
 - To initialize:
   ```bash
   spica init                 # or: npx -y @simway/spica init

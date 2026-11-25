@@ -1,6 +1,6 @@
 {
   "name": "@simway/spica",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "Canonical TypeScript/Zod Open ADM schema, invariant validator, multi-lens specification and diagram projectors, and DDD Crew markdown parser for Spica",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -20,13 +20,12 @@
   "files": [
     "dist",
     "schemas",
-    "skills",
     "LICENSE",
     "README.md"
   ],
   "type": "module",
   "scripts": {
-    "build": "tsc -p tsconfig.json && node scripts/generate-schema.mjs",
+    "build": "tsc -p tsconfig.json && node scripts/vendor-skill.mjs && node scripts/generate-schema.mjs",
     "prepack": "npm run build",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit"
