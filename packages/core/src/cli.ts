@@ -29,6 +29,13 @@ import {
   VSCODE_SETTINGS_TEMPLATE,
   COPILOT_INSTRUCTIONS_TEMPLATE,
 } from "./initTemplates.js";
+import {
+  ALL_SKILL_AGENTS,
+  SKILL_NAME,
+  installSkill,
+  type SkillAgent,
+  type SkillScope,
+} from "./skillInstaller.js";
 
 const VERSION = "0.0.14";
 
@@ -42,6 +49,7 @@ Usage:
 
 Commands:
   init [dir]                   Bootstrap IDE tooling (CLAUDE.md, CODEX.md, .vscode/settings.json, Copilot)
+  skill install [options]      Install spica-architect skill into local or global AI agent runtimes
   new [domain]                 Scaffold a schema-compliant Open ADM model into .spica/ (1 non-anemic aggregate)
   validate <file>              Validate an Open ADM model for invariant soundness
   spec                         Print an offline summary of the Open ADM metamodel
@@ -57,7 +65,10 @@ Commands:
 Options:
   --out, -o <path>             Specify output directory or file path
   --ide <claude|codex|vscode|copilot|all>  Select environments for "init" (default: all)
-  --force, -f                  Overwrite existing files (for "init" and "new")
+  --agent <claude|cursor|openclaw|all>     Select agent runtime for "skill install" (default: auto-detect)
+  --global, -g                 Install skill into user home directory (default for "skill install")
+  --local, -l                  Install skill into current project directory (for "skill install")
+  --force, -f                  Overwrite existing files (for "init", "new", and "skill install")
   --title <string>             Set system title for "new" (default: "<Domain> System")
   --actor <string>             Set primary actor for "new" (default: "Admin")
   --aggregate <string>         Set aggregate root name for "new" (default: domain name)
@@ -68,6 +79,8 @@ Options:
 Examples:
   npx -y @simway/spica init
   npx -y @simway/spica init . --ide copilot --force
+  npx -y @simway/spica skill install
+  npx -y @simway/spica skill install --agent claude --local --force
   npx -y @simway/spica new OrderFulfillment
   npx -y @simway/spica new billing --actor Admin --title "Billing System" --aggregate Invoice
   npx -y @simway/spica new order-fulfillment --out specs/ --force --json
@@ -213,6 +226,137 @@ function runInit(args: string[]): number {
   console.log(`\nValidate your first model: npx -y @simway/spica validate <domain>.adm.json\n`);
 
   return 0;
+}
+
+function printSkillHelp(): void {
+  console.log(`
+Usage: spica skill install [options]
+
+Install the bundled ${SKILL_NAME} skill into local or global AI agent runtimes (zero-network).
+
+Options:
+  --agent <claude|cursor|openclaw|all>  Target agent runtime (default: auto-detect existing config dirs)
+  --global, -g                          Install into user home directory (default)
+  --local, -l                           Install into current project directory
+  --force, -f                           Overwrite existing SKILL.md
+  --json                                Output machine-readable JSON
+  --help, -h                            Show this help message
+`);
+}
+
+function runSkillInstall(args: string[]): number {
+  const selected = new Set<SkillAgent>();
+  let hasGlobal = false;
+  let hasLocal = false;
+  let force = false;
+  let isJson = false;
+
+  const addAgent = (raw: string): boolean => {
+    const value = raw.trim().toLowerCase();
+    if (value === "all") {
+      for (const agent of ALL_SKILL_AGENTS) selected.add(agent);
+      return true;
+    }
+    if (value === "claude" || value === "cursor" || value === "openclaw") {
+      selected.add(value);
+      return true;
+    }
+    console.error(`Error: Unknown --agent value "${raw}". Expected one of: claude, cursor, openclaw, all.`);
+    return false;
+  };
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === "--help" || arg === "-h") {
+      printSkillHelp();
+      return 0;
+    } else if (arg === "--agent") {
+      const value = args[i + 1];
+      if (!value || value.startsWith("-")) {
+        console.error(`Error: --agent requires a value (claude | cursor | openclaw | all).`);
+        return 1;
+      }
+      if (!addAgent(value)) return 1;
+      i++;
+    } else if (arg.startsWith("--agent=")) {
+      if (!addAgent(arg.slice("--agent=".length))) return 1;
+    } else if (arg === "--global" || arg === "-g") {
+      hasGlobal = true;
+    } else if (arg === "--local" || arg === "-l") {
+      hasLocal = true;
+    } else if (arg === "--force" || arg === "-f") {
+      force = true;
+    } else if (arg === "--json") {
+      isJson = true;
+    } else if (arg.startsWith("-")) {
+      console.error(`Error: Unknown option "${arg}". Run "spica skill install --help" for usage.`);
+      return 1;
+    } else {
+      console.error(`Error: Unexpected argument "${arg}". Run "spica skill install --help" for usage.`);
+      return 1;
+    }
+  }
+
+  if (hasGlobal && hasLocal) {
+    console.error(`Error: Cannot specify both --global and --local.`);
+    return 1;
+  }
+
+  const scope: SkillScope = hasLocal ? "local" : "global";
+  const result = installSkill({
+    agents: selected.size > 0 ? Array.from(selected) : undefined,
+    scope,
+    force,
+  });
+
+  if (result.error) {
+    console.error(`Error: ${result.error}`);
+    return 1;
+  }
+
+  if (isJson) {
+    console.log(JSON.stringify(result, null, 2));
+    return 0;
+  }
+
+  if (result.detectedNone) {
+    console.log(`\nℹ️  No supported AI agent configuration directories detected in ${result.baseDir} (.claude, .cursor, .openclaw).`);
+    console.log(`   Tip: Pass --agent <claude|cursor|openclaw|all> to install explicitly.\n`);
+    return 0;
+  }
+
+  console.log(`\n🌟 Spica skill (${SKILL_NAME}) [${result.scope}]: ${result.baseDir}`);
+
+  if (result.installed.length > 0) {
+    console.log(`\nInstalled:`);
+    for (const entry of result.installed) {
+      console.log(`   ✅ ${entry.agent}: ${entry.path}`);
+    }
+  }
+
+  if (result.skipped.length > 0) {
+    console.log(`\nSkipped (already exists — pass --force to overwrite):`);
+    for (const entry of result.skipped) {
+      console.log(`   ⏭️  ${entry.agent}: ${entry.path}`);
+    }
+  }
+
+  console.log("");
+  return 0;
+}
+
+function runSkill(args: string[]): number {
+  if (args.length === 0 || args[0] === "--help" || args[0] === "-h") {
+    printSkillHelp();
+    return 0;
+  }
+
+  if (args[0] === "install") {
+    return runSkillInstall(args.slice(1));
+  }
+
+  console.error(`Error: Unknown skill subcommand "${args[0]}". Expected "install". Run "spica skill --help" for usage.`);
+  return 1;
 }
 
 function runSpec(args: string[]): number {
@@ -699,6 +843,10 @@ export function runCli(args: string[]): number | Promise<number> {
 
   if (command === "init") {
     return runInit(args.slice(1));
+  }
+
+  if (command === "skill") {
+    return runSkill(args.slice(1));
   }
 
   if (command === "new") {
