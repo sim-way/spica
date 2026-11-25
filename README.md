@@ -37,6 +37,14 @@ Spica is a Spec-Driven Development toolchain that transforms a machine-verifiabl
 
 ---
 
+### When to Use Spica (and When NOT To)
+
+**Use Spica for** stateful, multi-actor business systems, such as fintech, SaaS billing, ERP/CRM, logistics, healthcare, reservations, and workflow approval engines.
+
+**Do NOT use Spica for** compilers or parsers (including Spica itself), image/video codecs, pure algorithmic calculations, CLI utilities, or game loops. Use standard TypeScript, Rust, or Go for those.
+
+---
+
 ### ⚡ Quick Start
 
 **Prerequisites:** Node.js 20+
