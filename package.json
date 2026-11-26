@@ -13,6 +13,7 @@
     "studio": "pnpm --filter web dev",
     "studio:build": "pnpm --filter web build",
     "pack:core": "pnpm --filter @simway/spica pack && mkdir -p releases && mv *.tgz releases/",
+    "build:binary": "node ./scripts/build-binary.mjs",
     "project-c4": "node ./scripts/project-c4.mjs",
     "project-domain-map": "node ./scripts/project-domain-map.mjs",
     "project-ddd-canvas": "node ./scripts/project-ddd-canvas.mjs",

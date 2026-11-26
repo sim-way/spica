@@ -1022,6 +1022,8 @@ export function runCli(args: string[]): number | Promise<number> {
 }
 
 function isDirectInvocation(): boolean {
+  // Bun sets `import.meta.main = true` for direct runs and `bun build --compile` binaries.
+  if ((import.meta as { main?: boolean }).main === true) return true;
   if (!process.argv[1]) return false;
   try {
     const scriptPath = fs.realpathSync(process.argv[1]);

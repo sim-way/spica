@@ -47,7 +47,22 @@ Spica is a Spec-Driven Development toolchain that transforms a machine-verifiabl
 
 ### ⚡ Quick Start
 
-**Prerequisites:** Node.js 20+
+**Option 1: Standalone Zero-Runtime Binary (No Node.js required)**
+
+```bash
+# macOS & Linux
+curl -fsSL https://spica.simway.io/install.sh | sh
+
+# Homebrew (macOS & Linux)
+brew install sim-way/tap/spica
+```
+
+```powershell
+# Windows (PowerShell)
+irm https://spica.simway.io/install.ps1 | iex
+```
+
+**Option 2: Node.js (`npx`, requires Node.js 20+)**
 
 ```bash
 # Initialize IDE tooling

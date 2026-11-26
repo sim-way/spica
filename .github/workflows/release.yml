@@ -1,0 +1,103 @@
+name: Release Binaries
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (e.g. 0.0.14)"
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-binaries:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck & Test
+        run: |
+          pnpm typecheck
+          pnpm test
+
+      - name: Build standalone binaries & archives
+        run: node scripts/build-binary.mjs --all --package --outdir releases/bin
+
+      - name: Smoke-test Linux x64 binary
+        run: |
+          chmod +x releases/bin/spica-linux-x64
+          releases/bin/spica-linux-x64 --version
+          releases/bin/spica-linux-x64 --help >/dev/null
+          tmpdir="$(mktemp -d)"
+          (cd "$tmpdir" && "$OLDPWD/releases/bin/spica-linux-x64" new SmokeTest && "$OLDPWD/releases/bin/spica-linux-x64" validate .spica/SmokeTest.adm.json && "$OLDPWD/releases/bin/spica-linux-x64" skill install --local --agent claude)
+          rm -rf "$tmpdir"
+
+      - name: Determine release version
+        id: meta
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            ver="${{ github.event.inputs.version }}"
+          else
+            ver="${GITHUB_REF_NAME#v}"
+          fi
+          echo "version=$ver" >> "$GITHUB_OUTPUT"
+          echo "tag=v$ver" >> "$GITHUB_OUTPUT"
+
+      - name: Generate Homebrew formula
+        run: |
+          node scripts/generate-homebrew-formula.mjs \
+            --version "${{ steps.meta.outputs.version }}" \
+            --checksums releases/bin/checksums.txt \
+            --out releases/bin/spica.rb
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          generate_release_notes: true
+          files: |
+            releases/bin/*.tar.gz
+            releases/bin/*.zip
+            releases/bin/checksums.txt
+            releases/bin/spica.rb
+
+      - name: Update Homebrew Tap (sim-way/homebrew-tap)
+        if: startsWith(github.ref, 'refs/tags/v') && secrets.HOMEBREW_TAP_TOKEN != ''
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          git clone "https://x-access-token:${GH_TOKEN}@github.com/sim-way/homebrew-tap.git" /tmp/homebrew-tap
+          mkdir -p /tmp/homebrew-tap/Formula
+          cp releases/bin/spica.rb /tmp/homebrew-tap/Formula/spica.rb
+          cd /tmp/homebrew-tap
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/spica.rb
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(spica): update formula to ${{ steps.meta.outputs.tag }}"
+            git push
+          fi

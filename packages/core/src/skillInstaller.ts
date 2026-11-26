@@ -2,6 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import url from "node:url";
+import { BUNDLED_SKILL_CONTENT } from "./bundledSkill.js";
 
 export type SkillAgent = "claude" | "cursor" | "openclaw";
 export type SkillScope = "global" | "local";
@@ -27,6 +28,7 @@ export interface SkillInstallOptions {
   homeDir?: string;
   cwd?: string;
   sourcePath?: string;
+  resolveSkillPath?: () => string | undefined;
 }
 
 export interface SkillInstallResult {
@@ -75,8 +77,28 @@ export function installSkill(options: SkillInstallOptions): SkillInstallResult {
       ? (options.homeDir ?? os.homedir())
       : (options.cwd ?? process.cwd());
 
-  const sourcePath = options.sourcePath ?? resolveBundledSkillPath();
-  if (!sourcePath || !fs.existsSync(sourcePath)) {
+  const sourcePath =
+    options.sourcePath ?? (options.resolveSkillPath ?? resolveBundledSkillPath)();
+
+  if (options.sourcePath && !fs.existsSync(options.sourcePath)) {
+    return {
+      scope: options.scope,
+      baseDir,
+      installed: [],
+      skipped: [],
+      detectedNone: false,
+      error: `Bundled ${SKILL_NAME} skill not found at "${options.sourcePath}".`,
+    };
+  }
+
+  let skillContent: string | undefined;
+  if (sourcePath && fs.existsSync(sourcePath)) {
+    skillContent = fs.readFileSync(sourcePath, "utf-8");
+  } else if (!options.sourcePath && BUNDLED_SKILL_CONTENT) {
+    skillContent = BUNDLED_SKILL_CONTENT;
+  }
+
+  if (!skillContent) {
     return {
       scope: options.scope,
       baseDir,
@@ -112,7 +134,7 @@ export function installSkill(options: SkillInstallOptions): SkillInstallResult {
       continue;
     }
     fs.mkdirSync(path.dirname(dest), { recursive: true });
-    fs.copyFileSync(sourcePath, dest);
+    fs.writeFileSync(dest, skillContent, "utf-8");
     installed.push({ agent, path: dest });
   }
 

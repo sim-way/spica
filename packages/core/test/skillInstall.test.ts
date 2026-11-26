@@ -134,4 +134,20 @@ describe("Spica CLI (spica skill install)", () => {
     expect(resolved).toBeDefined();
     expect(fs.existsSync(resolved!)).toBe(true);
   });
+
+  it("falls back to embedded skill content when no on-disk SKILL.md is available (standalone binary)", async () => {
+    const { installSkill } = await import("../src/skillInstaller.js");
+    const result = installSkill({
+      agents: ["claude"],
+      scope: "local",
+      force: true,
+      cwd: fakeCwd,
+      resolveSkillPath: () => undefined,
+    });
+
+    expect(result.error).toBeUndefined();
+    expect(result.installed).toHaveLength(1);
+    const installedPath = path.join(fakeCwd, ".claude", "skills", "spica-architect", "SKILL.md");
+    expect(fs.readFileSync(installedPath, "utf-8")).toBe(fs.readFileSync(REPO_SKILL_PATH, "utf-8"));
+  });
 });
