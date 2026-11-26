@@ -83,6 +83,32 @@ npx -y @simway/spica project-openapi .spica/Billing.adm.json -o openapi.json
 
 ---
 
+### 🤖 Supported AI Coding Agents
+
+Spica provides two built-in commands for AI agent integration (plus the external `skills` CLI):
+
+| Agent / IDE | `spica skill install` (`SKILL.md`) | `spica init` (Project Config) |
+| :--- | :--- | :--- |
+| **Claude Code** | ✅ `--agent claude` (`.claude/skills/`) | ✅ `--ide claude` (`CLAUDE.md`) |
+| **OpenAI Codex** | ✅ `--agent codex` (`~/.codex/skills/`, local `.agents/skills/`) | ✅ `--ide codex` (`CODEX.md`) |
+| **GitHub Copilot / VS Code** | ✅ `--agent copilot` (`~/.copilot/skills/`, local `.github/skills/`) | ✅ `--ide copilot` / `--ide vscode` |
+| **Cursor** | ✅ `--agent cursor` (`.cursor/skills/`) | — |
+| **OpenClaw** | ✅ `--agent openclaw` (`.openclaw/skills/`) | — |
+
+```bash
+# Auto-detect & install skill into ~/.claude, ~/.cursor, ~/.openclaw, ~/.codex, ~/.copilot
+npx -y @simway/spica skill install
+
+# Target a specific agent or install into the current project (--local)
+npx -y @simway/spica skill install --agent codex
+npx -y @simway/spica skill install --agent copilot --local
+
+# Or install via the external skills CLI
+npx skills add sim-way/spica --skill spica-architect
+```
+
+---
+
 ### 🛠️ Local Development
 
 ```bash

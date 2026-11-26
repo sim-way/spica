@@ -4,16 +4,26 @@ import path from "node:path";
 import url from "node:url";
 import { BUNDLED_SKILL_CONTENT } from "./bundledSkill.js";
 
-export type SkillAgent = "claude" | "cursor" | "openclaw";
+export type SkillAgent = "claude" | "cursor" | "openclaw" | "codex" | "copilot";
 export type SkillScope = "global" | "local";
 
 export const SKILL_NAME = "spica-architect";
-export const ALL_SKILL_AGENTS: SkillAgent[] = ["claude", "cursor", "openclaw"];
+export const ALL_SKILL_AGENTS: SkillAgent[] = ["claude", "cursor", "openclaw", "codex", "copilot"];
 
 export const AGENT_CONFIG_DIRS: Record<SkillAgent, string> = {
   claude: ".claude",
   cursor: ".cursor",
   openclaw: ".openclaw",
+  codex: ".codex",
+  copilot: ".copilot",
+};
+
+const LOCAL_AGENT_SKILL_ROOTS: Record<SkillAgent, string> = {
+  claude: ".claude",
+  cursor: ".cursor",
+  openclaw: ".openclaw",
+  codex: ".agents",
+  copilot: ".github",
 };
 
 export interface SkillInstallEntry {
@@ -61,14 +71,34 @@ export function resolveBundledSkillPath(fromUrl: string = import.meta.url): stri
   return undefined;
 }
 
-export function detectSkillAgents(baseDir: string): SkillAgent[] {
-  return ALL_SKILL_AGENTS.filter((agent) =>
-    fs.existsSync(path.join(baseDir, AGENT_CONFIG_DIRS[agent])),
-  );
+export function detectSkillAgents(baseDir: string, scope: SkillScope = "global"): SkillAgent[] {
+  return ALL_SKILL_AGENTS.filter((agent) => {
+    if (scope === "local") {
+      if (agent === "codex") {
+        return (
+          fs.existsSync(path.join(baseDir, ".agents")) ||
+          fs.existsSync(path.join(baseDir, ".codex"))
+        );
+      }
+      if (agent === "copilot") {
+        return (
+          fs.existsSync(path.join(baseDir, ".copilot")) ||
+          fs.existsSync(path.join(baseDir, ".github", "skills")) ||
+          fs.existsSync(path.join(baseDir, ".github", "copilot-instructions.md"))
+        );
+      }
+    }
+    return fs.existsSync(path.join(baseDir, AGENT_CONFIG_DIRS[agent]));
+  });
 }
 
-export function resolveSkillTargetPath(baseDir: string, agent: SkillAgent): string {
-  return path.join(baseDir, AGENT_CONFIG_DIRS[agent], "skills", SKILL_NAME, "SKILL.md");
+export function resolveSkillTargetPath(
+  baseDir: string,
+  agent: SkillAgent,
+  scope: SkillScope = "global",
+): string {
+  const rootDir = scope === "local" ? LOCAL_AGENT_SKILL_ROOTS[agent] : AGENT_CONFIG_DIRS[agent];
+  return path.join(baseDir, rootDir, "skills", SKILL_NAME, "SKILL.md");
 }
 
 export function installSkill(options: SkillInstallOptions): SkillInstallResult {
@@ -112,7 +142,7 @@ export function installSkill(options: SkillInstallOptions): SkillInstallResult {
   const targets =
     options.agents && options.agents.length > 0
       ? options.agents
-      : detectSkillAgents(baseDir);
+      : detectSkillAgents(baseDir, options.scope);
 
   if (targets.length === 0) {
     return {
@@ -128,7 +158,7 @@ export function installSkill(options: SkillInstallOptions): SkillInstallResult {
   const skipped: SkillInstallEntry[] = [];
 
   for (const agent of targets) {
-    const dest = resolveSkillTargetPath(baseDir, agent);
+    const dest = resolveSkillTargetPath(baseDir, agent, options.scope);
     if (fs.existsSync(dest) && !options.force) {
       skipped.push({ agent, path: dest });
       continue;

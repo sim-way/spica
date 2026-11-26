@@ -65,7 +65,7 @@ Commands:
 Options:
   --out, -o <path>             Specify output directory or file path
   --ide <claude|codex|vscode|copilot|all>  Select environments for "init" (default: all)
-  --agent <claude|cursor|openclaw|all>     Select agent runtime for "skill install" (default: auto-detect)
+  --agent <claude|cursor|openclaw|codex|copilot|all>  Select agent runtime for "skill install" (default: auto-detect)
   --global, -g                 Install skill into user home directory (default for "skill install")
   --local, -l                  Install skill into current project directory (for "skill install")
   --force, -f                  Overwrite existing files (for "init", "new", and "skill install")
@@ -235,7 +235,7 @@ Usage: spica skill install [options]
 Install the bundled ${SKILL_NAME} skill into local or global AI agent runtimes (zero-network).
 
 Options:
-  --agent <claude|cursor|openclaw|all>  Target agent runtime (default: auto-detect existing config dirs)
+  --agent <claude|cursor|openclaw|codex|copilot|all>  Target agent runtime (default: auto-detect existing config dirs)
   --global, -g                          Install into user home directory (default)
   --local, -l                           Install into current project directory
   --force, -f                           Overwrite existing SKILL.md
@@ -257,11 +257,11 @@ function runSkillInstall(args: string[]): number {
       for (const agent of ALL_SKILL_AGENTS) selected.add(agent);
       return true;
     }
-    if (value === "claude" || value === "cursor" || value === "openclaw") {
-      selected.add(value);
+    if ((ALL_SKILL_AGENTS as string[]).includes(value)) {
+      selected.add(value as SkillAgent);
       return true;
     }
-    console.error(`Error: Unknown --agent value "${raw}". Expected one of: claude, cursor, openclaw, all.`);
+    console.error(`Error: Unknown --agent value "${raw}". Expected one of: ${ALL_SKILL_AGENTS.join(", ")}, all.`);
     return false;
   };
 
@@ -273,7 +273,7 @@ function runSkillInstall(args: string[]): number {
     } else if (arg === "--agent") {
       const value = args[i + 1];
       if (!value || value.startsWith("-")) {
-        console.error(`Error: --agent requires a value (claude | cursor | openclaw | all).`);
+        console.error(`Error: --agent requires a value (${ALL_SKILL_AGENTS.join(" | ")} | all).`);
         return 1;
       }
       if (!addAgent(value)) return 1;
@@ -320,8 +320,12 @@ function runSkillInstall(args: string[]): number {
   }
 
   if (result.detectedNone) {
-    console.log(`\nℹ️  No supported AI agent configuration directories detected in ${result.baseDir} (.claude, .cursor, .openclaw).`);
-    console.log(`   Tip: Pass --agent <claude|cursor|openclaw|all> to install explicitly.\n`);
+    const expectedDirs =
+      result.scope === "local"
+        ? ".claude, .cursor, .openclaw, .agents/.codex, .github/skills/.copilot"
+        : ".claude, .cursor, .openclaw, .codex, .copilot";
+    console.log(`\nℹ️  No supported AI agent configuration directories detected in ${result.baseDir} (${expectedDirs}).`);
+    console.log(`   Tip: Pass --agent <${ALL_SKILL_AGENTS.join("|")}|all> to install explicitly.\n`);
     return 0;
   }
 

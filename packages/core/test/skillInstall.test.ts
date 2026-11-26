@@ -86,7 +86,7 @@ describe("Spica CLI (spica skill install)", () => {
     logSpy.mockRestore();
 
     expect(code).toBe(0);
-    for (const dotDir of [".claude", ".cursor", ".openclaw"]) {
+    for (const dotDir of [".claude", ".cursor", ".openclaw", ".codex", ".copilot"]) {
       expect(fs.existsSync(path.join(fakeHome, dotDir, "skills", "spica-architect", "SKILL.md"))).toBe(true);
     }
   });
@@ -100,6 +100,37 @@ describe("Spica CLI (spica skill install)", () => {
     expect(code).toBe(0);
     expect(fs.existsSync(path.join(fakeCwd, ".claude", "skills", "spica-architect", "SKILL.md"))).toBe(true);
     expect(fs.existsSync(path.join(fakeHome, ".claude", "skills", "spica-architect", "SKILL.md"))).toBe(false);
+  });
+
+  it("installs codex and copilot skills to their standard global and local directories", () => {
+    process.chdir(fakeCwd);
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    expect(runCli(["skill", "install", "--agent", "codex"])).toBe(0);
+    expect(runCli(["skill", "install", "--agent", "copilot"])).toBe(0);
+    expect(runCli(["skill", "install", "--local", "--agent", "codex"])).toBe(0);
+    expect(runCli(["skill", "install", "--local", "--agent", "copilot"])).toBe(0);
+
+    logSpy.mockRestore();
+
+    expect(fs.existsSync(path.join(fakeHome, ".codex", "skills", "spica-architect", "SKILL.md"))).toBe(true);
+    expect(fs.existsSync(path.join(fakeHome, ".copilot", "skills", "spica-architect", "SKILL.md"))).toBe(true);
+    expect(fs.existsSync(path.join(fakeCwd, ".agents", "skills", "spica-architect", "SKILL.md"))).toBe(true);
+    expect(fs.existsSync(path.join(fakeCwd, ".github", "skills", "spica-architect", "SKILL.md"))).toBe(true);
+  });
+
+  it("auto-detects local codex (.agents) and copilot (.github/skills) without false-matching plain .github", () => {
+    process.chdir(fakeCwd);
+    fs.mkdirSync(path.join(fakeCwd, ".github"), { recursive: true });
+    fs.mkdirSync(path.join(fakeCwd, ".agents"), { recursive: true });
+
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const code = runCli(["skill", "install", "--local"]);
+    logSpy.mockRestore();
+
+    expect(code).toBe(0);
+    expect(fs.existsSync(path.join(fakeCwd, ".agents", "skills", "spica-architect", "SKILL.md"))).toBe(true);
+    expect(fs.existsSync(path.join(fakeCwd, ".github", "skills", "spica-architect", "SKILL.md"))).toBe(false);
   });
 
   it("skips existing SKILL.md without --force and overwrites with --force", () => {
